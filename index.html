@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay May Mắn - Chia hết và chia có dư</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMmg9fBJCU1GqOpjLSZPAOUKVlJCRWdyANTrDxVJVBCAAoAWO" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzYCcm2iWTwEwmCcsCjIssoJSXmflGOLdeA" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax5AScKprqGp7VeuWJmaMsnF+VSAqPweUSI" crossorigin="anonymous"></script>
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .katex-display > .katex {
+            text-align: left !important;
+        }
+        .option-btn.selected {
+            background-color: #60a5fa; /* blue-400 */
+            color: white;
+            border-color: #3b82f6; /* blue-600 */
+        }
+        .option-btn.correct {
+            background-color: #4ade80; /* green-400 */
+            color: white;
+            border-color: #22c55e; /* green-600 */
+        }
+        .option-btn.incorrect {
+            background-color: #f87171; /* red-400 */
+            color: white;
+            border-color: #ef4444; /* red-600 */
+        }
+        .solution {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .solution.show {
+            max-height: 500px; /* Adjust as needed */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-teal-100 to-cyan-200 min-h-screen flex items-center justify-center font-sans p-2 sm:p-4">
+
+    <div id="game-container" class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-8 transform transition-all duration-500">
+        
+        <div id="start-screen" class="text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-700 mb-2">Vòng Quay May Mắn</h1>
+            <h2 class="text-lg sm:text-xl text-gray-600 mb-6">Bài 6: Chia hết và chia có dư</h2>
+            <p class="text-gray-500 mb-8">Nhấn "QUAY" để bắt đầu và trả lời các câu hỏi trắc nghiệm!</p>
+            <button id="spin-button" class="w-48 h-48 sm:w-56 sm:h-56 bg-gradient-to-br from-cyan-400 to-teal-500 text-white rounded-full text-4xl sm:text-5xl font-extrabold shadow-lg transform hover:scale-105 active:scale-95 transition-transform duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+                QUAY
+            </button>
+            <div class="mt-8 text-lg text-teal-600 font-semibold">
+                <span id="score-display">Điểm: 0</span> | <span id="progress-display">Câu: 0/10</span>
+            </div>
+        </div>
+
+        <div id="question-screen" class="hidden">
+            <div class="mb-6">
+                <div class="flex justify-between items-center text-sm font-semibold text-gray-500 mb-2">
+                    <span id="question-counter">Câu hỏi 1/10</span>
+                    <span id="current-score">Điểm: 0</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-cyan-500 h-2.5 rounded-full transition-all duration-500" style="width: 10%"></div>
+                </div>
+            </div>
+            
+            <div id="question-card" class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 sm:p-6 mb-4">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800" id="question-text"></h3>
+            </div>
+            
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <!-- Options will be inserted here -->
+            </div>
+
+            <div id="feedback-container" class="mt-4">
+                <button id="submit-button" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-75" disabled>Chọn một đáp án</button>
+                <div id="solution-container" class="solution mt-4">
+                     <div class="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
+                        <h4 class="font-bold text-teal-800">Lời giải chi tiết:</h4>
+                        <p id="solution-text" class="text-gray-700 mt-2"></p>
+                    </div>
+                </div>
+                <button id="next-question-button" class="hidden w-full mt-4 bg-teal-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-75">Câu Tiếp Theo</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden text-center p-4">
+            <h2 class="text-3xl sm:text-4xl font-bold text-cyan-700 mb-4">Hoàn Thành!</h2>
+            <p class="text-xl text-gray-600 mb-6">Kết quả của bạn:</p>
+            <p class="text-5xl font-extrabold text-teal-500 mb-8" id="final-score"></p>
+            <button id="restart-button" class="bg-gradient-to-r from-cyan-400 to-teal-500 text-white font-bold py-3 px-8 rounded-full hover:from-cyan-500 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 text-lg">
+                Làm lại
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                {
+                    question: "Trong phép chia cho 3, số dư có thể là:",
+                    options: ["0, 1, 2", "1, 2, 3", "0, 1", "Chỉ có 0"],
+                    answer: "0, 1, 2",
+                    solution: "Khi chia một số tự nhiên cho 3, số dư phải nhỏ hơn số chia (là 3). Do đó, các số dư có thể là 0, 1, hoặc 2."
+                },
+                {
+                    question: "Tìm số tự nhiên $x$, biết $120$ chia hết cho $x$ và $10 < x < 20$.",
+                    options: ["12, 15", "10, 12, 15", "12, 15, 20", "Chỉ có 12"],
+                    answer: "12, 15",
+                    solution: "Các ước của 120 là 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120. Các ước lớn hơn 10 và nhỏ hơn 20 là 12 và 15. Vậy $x \\in \\{12, 15\\}$."
+                },
+                {
+                    question: "Phép chia $125 : 8$ có số dư là bao nhiêu?",
+                    options: ["3", "4", "5", "6"],
+                    answer: "5",
+                    solution: "Thực hiện phép chia: $125 = 8 \\times 15 + 5$. Vậy phép chia 125 cho 8 có thương là 15 và số dư là 5."
+                },
+                {
+                    question: "Trong phép chia có dư, với số chia là 7, số dư lớn nhất có thể là:",
+                    options: ["5", "6", "7", "8"],
+                    answer: "6",
+                    solution: "Trong phép chia có dư, số dư luôn nhỏ hơn số chia. Vì số chia là 7, số dư lớn nhất có thể là 6."
+                },
+                {
+                    question: "Nếu $a$ chia hết cho 5 và $b$ chia hết cho 5 thì tổng $a+b$ sẽ:",
+                    options: ["Chia hết cho 10", "Không chia hết cho 5", "Chia hết cho 5", "Chia hết cho 25"],
+                    answer: "Chia hết cho 5",
+                    solution: "Đây là một tính chất của phép chia hết: Nếu $a$ chia hết cho $m$ và $b$ chia hết cho $m$ thì $(a+b)$ cũng chia hết cho $m$. Do đó, $a+b$ chia hết cho 5."
+                },
+                {
+                    question: "Tìm số tự nhiên $a$ nhỏ nhất khác 0 biết rằng $a$ chia hết cho 15.",
+                    options: ["1", "5", "15", "30"],
+                    answer: "15",
+                    solution: "Các bội của 15 là $0, 15, 30, 45, ...$. Số nhỏ nhất khác 0 chia hết cho 15 chính là 15."
+                },
+                {
+                    question: "Một số chia cho 9 dư 4. Hỏi số đó chia cho 3 có số dư là bao nhiêu?",
+                    options: ["0", "1", "2", "Không xác định được"],
+                    answer: "1",
+                    solution: "Số đó có dạng $a = 9k + 4$ (với $k$ là thương). Ta có $9k$ chia hết cho 3. Số 4 chia cho 3 dư 1. Vậy $a = 9k+4$ chia cho 3 sẽ dư 1."
+                },
+                {
+                    question: "Cho biểu thức $A = 12 + 24 + x$. Điều kiện của $x$ để $A$ chia hết cho 6 là:",
+                    options: ["$x$ chia hết cho 2", "$x$ chia hết cho 3", "$x$ chia hết cho 6", "$x$ là số chẵn"],
+                    answer: "$x$ chia hết cho 6",
+                    solution: "Ta thấy 12 chia hết cho 6 và 24 chia hết cho 6. Để tổng $A = 12 + 24 + x$ chia hết cho 6, thì $x$ cũng phải chia hết cho 6 (theo tính chất chia hết của một tổng)."
+                },
+                {
+                    question: "Tìm thương và số dư của phép chia 2468 cho 10.",
+                    options: ["Thương 246, dư 8", "Thương 24, dư 68", "Thương 2, dư 468", "Thương 2460, dư 8"],
+                    answer: "Thương 246, dư 8",
+                    solution: "Ta có $2468 = 2460 + 8 = 10 \\times 246 + 8$. Vậy phép chia 2468 cho 10 có thương là 246 và số dư là 8."
+                },
+                {
+                    question: "Trong một phép chia, số bị chia là 89, số dư là 5. Số chia và thương lần lượt là:",
+                    options: ["12 và 7", "7 và 12", "14 và 6", "Không tìm được"],
+                    answer: "12 và 7",
+                    solution: "Gọi số chia là $b$ và thương là $q$. Ta có $89 = b \\times q + 5$, với $b > 5$. Suy ra $b \\times q = 89 - 5 = 84$. Ta cần tìm hai số có tích bằng 84 và một số lớn hơn 5. Phân tích 84 thành tích: $84 = 7 \times 12$. Vì $12>5$ nên ta chọn số chia là 12, thương là 7. (Nếu chọn số chia là 7, thương là 12 cũng thỏa mãn)."
+                }
+            ];
+
+            const startScreen = document.getElementById('start-screen');
+            const questionScreen = document.getElementById('question-screen');
+            const endScreen = document.getElementById('end-screen');
+            
+            const spinButton = document.getElementById('spin-button');
+            const submitButton = document.getElementById('submit-button');
+            const nextQuestionButton = document.getElementById('next-question-button');
+            const restartButton = document.getElementById('restart-button');
+            
+            const scoreDisplay = document.getElementById('score-display');
+            const progressDisplay = document.getElementById('progress-display');
+            const questionCounter = document.getElementById('question-counter');
+            const currentScore = document.getElementById('current-score');
+            const progressBar = document.getElementById('progress-bar');
+            
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const solutionContainer = document.getElementById('solution-container');
+            const solutionText = document.getElementById('solution-text');
+            const finalScore = document.getElementById('final-score');
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let remainingQuestions = [];
+            let selectedOption = null;
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            
+            function startGame() {
+                currentQuestionIndex = 0;
+                score = 0;
+                remainingQuestions = [...questions];
+                shuffleArray(remainingQuestions);
+                
+                updateHud();
+                
+                startScreen.classList.add('hidden');
+                endScreen.classList.add('hidden');
+                questionScreen.classList.remove('hidden');
+                
+                displayNextQuestion();
+            }
+
+            function displayNextQuestion() {
+                if (remainingQuestions.length === 0) {
+                    showEndScreen();
+                    return;
+                }
+
+                const question = remainingQuestions.pop();
+                currentQuestionIndex++;
+                
+                resetQuestionState();
+                
+                questionText.innerHTML = question.question;
+                solutionText.innerHTML = question.solution;
+                
+                const shuffledOptions = [...question.options];
+                shuffleArray(shuffledOptions);
+
+                shuffledOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerHTML = option;
+                    button.classList.add('option-btn', 'w-full', 'p-3', 'text-left', 'border-2', 'rounded-lg', 'transition-all', 'duration-200', 'hover:bg-gray-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-cyan-400');
+                    button.dataset.answer = question.answer;
+                    
+                    button.addEventListener('click', () => {
+                        if (submitButton.disabled) return;
+                        
+                        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+                        button.classList.add('selected');
+                        selectedOption = button;
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Xác nhận';
+                    });
+                    
+                    optionsContainer.appendChild(button);
+                });
+                
+                renderMath();
+                updateHud();
+            }
+
+            function resetQuestionState() {
+                optionsContainer.innerHTML = '';
+                selectedOption = null;
+                submitButton.disabled = true;
+                submitButton.textContent = 'Chọn một đáp án';
+                submitButton.classList.remove('hidden');
+                nextQuestionButton.classList.add('hidden');
+                solutionContainer.classList.remove('show');
+            }
+
+            function updateHud() {
+                const totalQuestions = questions.length;
+                
+                scoreDisplay.textContent = `Điểm: ${score}`;
+                progressDisplay.textContent = `Câu: ${currentQuestionIndex}/${totalQuestions}`;
+                questionCounter.textContent = `Câu hỏi ${currentQuestionIndex}/${totalQuestions}`;
+                currentScore.textContent = `Điểm: ${score}`;
+                
+                const progressPercentage = (currentQuestionIndex / totalQuestions) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            
+            function handleSubmit() {
+                if (!selectedOption) return;
+
+                submitButton.disabled = true;
+                const correctAnswer = selectedOption.dataset.answer;
+                const userAnswer = selectedOption.innerHTML;
+
+                if (userAnswer === correctAnswer) {
+                    score++;
+                    selectedOption.classList.add('correct');
+                    selectedOption.classList.remove('selected');
+                } else {
+                    selectedOption.classList.add('incorrect');
+                    selectedOption.classList.remove('selected');
+                    // Highlight the correct answer
+                    document.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+                
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
+                
+                // Show feedback and next button
+                solutionContainer.classList.add('show');
+                submitButton.classList.add('hidden');
+                nextQuestionButton.classList.remove('hidden');
+                currentScore.textContent = `Điểm: ${score}`;
+            }
+
+            function showEndScreen() {
+                questionScreen.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+                finalScore.textContent = `${score} / ${questions.length}`;
+            }
+            
+            function renderMath() {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError : false
+                });
+            }
+
+            spinButton.addEventListener('click', () => {
+                spinButton.classList.add('animate-spin');
+                setTimeout(() => {
+                    spinButton.classList.remove('animate-spin');
+                    startGame();
+                }, 1000);
+            });
+            
+            submitButton.addEventListener('click', handleSubmit);
+            nextQuestionButton.addEventListener('click', displayNextQuestion);
+            restartButton.addEventListener('click', () => {
+                endScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                currentQuestionIndex = 0;
+                score = 0;
+                updateHud();
+            });
+            
+        });
+    </script>
+</body>
+</html>
+
